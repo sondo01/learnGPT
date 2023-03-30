@@ -22,7 +22,8 @@ speaker.setProperty('rate', 180)
 speaker.setProperty('volume', 0.7)
 
 file_path = "in.wav"
-
+base_lang = ""
+to_learn = ""
 def record_audio():
     CHUNK = 4096  # increase buffer size
     FORMAT = pyaudio.paInt16
