@@ -1,7 +1,7 @@
 openai
 pyaudio
 wave
-numpy as np
+numpy 
 pyttsx3
 langdetect
 pynput

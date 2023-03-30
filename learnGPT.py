@@ -83,8 +83,11 @@ def record_audio():
     # Convert the list of frames into a single byte string
     audio_data = b"".join(frames)
     # Write the audio data to a WAV file
-    with wave.open(file_path, "wb") as f:
-        f.write(audio_data)
+    with wave.open(file_path, "wb") as wav_file:
+         wav_file.setnchannels(CHANNELS)
+         wav_file.setsampwidth(p.get_sample_size(FORMAT))
+         wav_file.setframerate(RATE)
+         wav_file.writeframes(audio_data)
 
     # send audio file to whisper to convert to text
     audio_file= "in.wav"
