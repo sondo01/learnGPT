@@ -41,4 +41,5 @@ Note 1: Please read and listen carefully to the instructions at the beginning.
 Note 2: There are 2 hot keys:
 "s": to skip a long answer
 "p": to pause before recording the next conversation.
+
 Enjoy and remember: Use at your own risk. I am not responsible for any consequences or damages that may result from using this project or its dependencies."
