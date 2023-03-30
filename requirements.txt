@@ -5,3 +5,4 @@ numpy as np
 pyttsx3
 langdetect
 pynput
+openai-whisper

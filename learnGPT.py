@@ -9,7 +9,7 @@ from langdetect import detect
 from pynput import keyboard
 import threading
 import time
-
+import difflib
 # Replace with your OpenAI API key
 openai.api_key = ""
 langs_detect = {"en": "english", "vi": "vietnamese", "de": "german", "fr": "french", "it": "italian", "ja": "japanese"}
@@ -24,6 +24,19 @@ speaker.setProperty('volume', 0.7)
 file_path = "in.wav"
 base_lang = ""
 to_learn = ""
+whisper_model = whisper.load_model("small")
+
+
+def find_best_match(input_string, expected_answers):
+    input_string = input_string.lower()
+    similarity_scores = []
+    for answer in expected_answers:
+        matcher = difflib.SequenceMatcher(None, input_string, answer.lower())
+        similarity_score = matcher.ratio()
+        similarity_scores.append(similarity_score)
+    best_match_index = similarity_scores.index(max(similarity_scores))
+    return expected_answers[best_match_index]
+
 def record_audio():
     CHUNK = 4096  # increase buffer size
     FORMAT = pyaudio.paInt16
@@ -68,26 +81,14 @@ def record_audio():
     # Convert the list of frames into a single byte string
     audio_data = b"".join(frames)
     # Write the audio data to a WAV file
-    with wave.open(file_path, "wb") as wav_file:
-        wav_file.setnchannels(CHANNELS)
-        wav_file.setsampwidth(p.get_sample_size(FORMAT))
-        wav_file.setframerate(RATE)
-        wav_file.writeframes(audio_data)
+    with wave.open(file_path, "wb") as f:
+        f.write(audio_data)
 
     # send audio file to whisper to convert to text
-    audio_file= open("in.wav", "rb")
-    if base_lang == "":
-        Whisper_prompt = f"Use English languages"
-    else:
-        Whisper_prompt = f"Use either {to_learn} or {base_lang} languages"
+    audio_file= "in.wav"
 
-    whisper_parms = {
-        "file": audio_file,
-        "model": "whisper-1",
-        "prompt": Whisper_prompt
-    }
-    wprompt = openai.Audio.transcribe("whisper-1", audio_file, whisper_parms).text
-    return wprompt
+    wprompt = whisper_model.transcribe(audio_file, fp16=False)
+    return wprompt["text"].strip()
 def on_press(key):
     global interrupt_speech, pause_event
     try:
@@ -126,6 +127,7 @@ def main():
     "german": "com.apple.speech.synthesis.voice.anna",
     "italian": "com.apple.speech.synthesis.voice.alice"
     }
+    voices_list = list(voices_learn.keys())
     base_lang = ""
     to_learn = ""
     is_foreign = ""
@@ -133,7 +135,6 @@ def main():
     system_prompt = "Hello, I'm Alice, your teacher for today. I can assist you in learning foreign languages (such as English, Vietnamese, Japanese, French, German, Italian) as well as math, science, humanity, and social science. Here are two important instructions for our conversation: First, to ensure smooth communication, we will take turns speaking. When you see 'Recording...', it's your turn to talk. If you pause for more than 2 seconds, it will be my turn to speak, and you will see 'Finished recording.' Secondly, if you would like to change the topic of the conversation, please say 'Please start a new conversation.'"
     print(system_prompt)
     speak(system_prompt)
-
 
     while base_lang == "" or base_lang not in voices_learn:
         if base_lang == "":
@@ -143,8 +144,9 @@ def main():
         print(st1)
         speak(st1)
 
-        base_lang = record_audio()
-        base_lang = base_lang.lower()
+        base_lang_in = record_audio()
+        base_lang_in = base_lang_in.lower()
+        base_lang = find_best_match(base_lang_in, voices_list)
         if base_lang.endswith(".") or base_lang.endswith("?") or base_lang.endswith("!"):
             base_lang = base_lang[:-1]
         print(base_lang)
@@ -158,7 +160,7 @@ def main():
 
         is_foreign = record_audio()
         is_foreign = is_foreign.lower()
-
+        is_foreign = find_best_match(is_foreign, ["yes", "no"])
         print(is_foreign)
     if "yes" in is_foreign:
         while to_learn == "" or to_learn not in voices_learn:
@@ -171,6 +173,7 @@ def main():
 
             to_learn = record_audio()
             to_learn = to_learn.lower()
+            to_learn = find_best_match(to_learn, voices_list)
             if to_learn.endswith(".") or to_learn.endswith("?") or to_learn.endswith("!"):
                 to_learn = to_learn[:-1]
             print(to_learn)
