@@ -10,6 +10,8 @@ from pynput import keyboard
 import threading
 import time
 import difflib
+import whisper
+
 # Replace with your OpenAI API key
 openai.api_key = ""
 langs_detect = {"en": "english", "vi": "vietnamese", "de": "german", "fr": "french", "it": "italian", "ja": "japanese"}
