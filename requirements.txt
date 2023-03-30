@@ -1,0 +1,7 @@
+openai
+pyaudio
+wave
+numpy as np
+pyttsx3
+langdetect
+pynput
